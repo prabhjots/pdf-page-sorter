@@ -1,0 +1,106 @@
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        p {
+            font-family: helvetica;
+            font-size: 24px;
+            text-align: center;
+            margin: 25px;
+        }
+
+        .small {
+            font-family: helvetica;
+            font-size: 18px;
+            text-align: center;
+            margin: 25px;
+        }
+
+        button {
+            background-color: #008CBA;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        input[type='file'] {
+            border: 3px dashed #999;
+            padding: 140px 50px 10px 50px;
+            cursor: move;
+            position: relative;
+        }
+
+        input[type='file']:before {
+            content: "drag & drop your files here";
+            display: block;
+            position: absolute;
+            text-align: center;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 40px;
+            margin: -25px 0 0 -100px;
+            font-size: 18px;
+            font-weight: bold;
+            color: #999;
+        }
+    </style>
+
+    <script src="https://unpkg.com/pdf-lib@1.4.0"></script>
+    <script src="https://unpkg.com/downloadjs@1.4.7"></script>
+</head>
+
+
+
+<body>
+    <input id="uploadedFile" type="file" onchange="sortPdf()" />
+</body>
+
+<script>
+    const { PDFDocument, StandardFonts, rgb } = PDFLib
+
+
+    async function sortPdf() {
+        const file = document.getElementById('uploadedFile').files[0]
+
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(file);
+        reader.onload = async () => {
+            const pdfDoc = await PDFDocument.load(reader.result);
+            reorderPages(pdfDoc, getOrder(pdfDoc.getPages().length))
+            const pdfBytes = await pdfDoc.save()
+            download(pdfBytes, file.name.substring(0, file.name.length -4) + "_sorted.pdf", "application/pdf");
+        };
+    }
+
+    function reorderPages(pdfDoc, newOrder) {
+        const pages = pdfDoc.getPages();
+        for (let currentPage = 0; currentPage < newOrder.length; currentPage++) {
+            pdfDoc.removePage(currentPage);
+            pdfDoc.insertPage(currentPage, pages[newOrder[currentPage]]);
+        }
+    };
+
+    function getOrder(pages) {
+        const order = []
+
+        for(var i = 0; i < pages/2; i++){
+            order.push(i, pages -i -1)
+        }
+        return order;
+    }    
+</script>
+
+</html>
